@@ -7,6 +7,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,12 +22,15 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.ilman.weatherapp2.R;
+import com.example.ilman.weatherapp2.adapter.WeatherListAdapter;
+import com.example.ilman.weatherapp2.model.WeatherList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 
 import butterknife.BindView;
@@ -47,6 +52,9 @@ public class WeatherFragment extends Fragment {
     @BindView(R.id.tvStatus) TextView tvStatus;
     @BindView(R.id.imgCuaca) ImageView imgCuaca;
 
+    // ADD LIST
+    ArrayList<WeatherList> mWeatherList= new ArrayList<>();
+    WeatherListAdapter adapterWeather;
 
     public WeatherFragment() {
         // Required empty public constructor
@@ -60,8 +68,15 @@ public class WeatherFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_weather, container, false);
         ButterKnife.bind(this,view);
 
-        //TODO code
+        RecyclerView recyclerView= (RecyclerView) view.findViewById(R.id.recycleList);
+        adapterWeather = new WeatherListAdapter(mWeatherList);
+        recyclerView.setAdapter(adapterWeather);
 
+        // Untuk orientasi recyclerview nya kita harus gunakan linearlayout manager
+        LinearLayoutManager linearLayoutManager= new LinearLayoutManager(getContext(),LinearLayoutManager.VERTICAL,false);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        //TODO code
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, API_URL, null, new Response.Listener<JSONObject>() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
@@ -118,6 +133,24 @@ public class WeatherFragment extends Fragment {
                     }
                     tvTime.setText(time);
                     tvDayDate.setText(datecustom);
+
+
+                    for (int x=1; x<10; x++){
+                        JSONObject objectList= listArray.getJSONObject(x);
+                        JSONObject mainObjectList= objectList.getJSONObject("main");
+                        Double tempMaxList= mainObjectList.getDouble("temp_max");
+                        Double tempMinList= mainObjectList.getDouble("temp_min");
+
+                        JSONArray weatherArrayList= objectList.getJSONArray("weather");
+                        JSONObject weatherObjectList= weatherArrayList.getJSONObject(0);
+                        String statusList= weatherObjectList.getString("main");
+                        String dateList= objectList.getString("dt_txt");
+
+                        WeatherList weatherListModel= new WeatherList(dateList,tempMaxList,tempMinList,statusList);
+                        mWeatherList.add(weatherListModel);
+                        adapterWeather.notifyDataSetChanged();
+
+                    }
 
 
 
